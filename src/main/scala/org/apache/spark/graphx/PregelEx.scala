@@ -19,10 +19,10 @@ package org.apache.spark.graphx
 
 import scala.reflect.ClassTag
 
-import org.apache.spark.graphx.util.PeriodicGraphCheckpointer
+import org.apache.spark.graphx.util.PeriodicGraphCheckpointerEx
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
-import org.apache.spark.rdd.util.PeriodicRDDCheckpointer
+import org.apache.spark.rdd.util.PeriodicRDDCheckpointerEx
 
 // This is the modified version of [org.apache.spark.graphx.Pregel]
 /**
@@ -130,13 +130,13 @@ object PregelEx extends Logging {
     val checkpointInterval = graph.vertices.sparkContext.getConf
       .getInt("spark.graphx.pregel.checkpointInterval", -1)
     var g = graph.mapVertices((vid, vdata) => vprog(vid, vdata, initialMsg))
-    val graphCheckpointer = new PeriodicGraphCheckpointer[VD, ED](
+    val graphCheckpointer = new PeriodicGraphCheckpointerEx[VD, ED](
       checkpointInterval, graph.vertices.sparkContext)
     graphCheckpointer.update(g)
 
     // compute the messages
     var messages = GraphXUtils.mapReduceTriplets(g, sendMsg, mergeMsg)
-    val messageCheckpointer = new PeriodicRDDCheckpointer[(VertexId, A)](
+    val messageCheckpointer = new PeriodicRDDCheckpointerEx[(VertexId, A)](
       checkpointInterval, graph.vertices.sparkContext)
     messageCheckpointer.update(messages.asInstanceOf[RDD[(VertexId, A)]])
     var activeMessages = messages.count()
@@ -172,9 +172,9 @@ object PregelEx extends Logging {
       }
 
       // Unpersist the RDDs hidden by newly-materialized RDDs
-      oldMessages.unpersist()
-      prevG.unpersistVertices()
-      prevG.edges.unpersist()
+      oldMessages.unpersist(blocking = true)
+      prevG.unpersistVertices(blocking = true)
+      prevG.edges.unpersist(blocking = true)
       // count the iteration
       i += 1
     }
