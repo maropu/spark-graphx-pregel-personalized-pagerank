@@ -156,8 +156,11 @@ object PageRankEx extends Logging {
 
     // SPARK-18847 If the graph has sinks (vertices with no outgoing edges) correct the sum of ranks
     val rankSums = rankGraph.vertices.values.fold(zeros(sourcesNum))(_ +:+ _)
-    rankGraph.vertices.mapValues { (_, attr) =>
+    val ppr = rankGraph.vertices.mapValues { (_, attr) =>
       Vectors.fromBreeze(attr /:/ rankSums)
     }
+    // Sets true to `blocking` for job stability
+    pagerankGraph.unpersist(blocking = true)
+    ppr
   }
 }
