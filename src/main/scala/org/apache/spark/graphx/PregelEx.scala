@@ -172,9 +172,9 @@ object PregelEx extends Logging {
       }
 
       // Unpersist the RDDs hidden by newly-materialized RDDs
-      oldMessages.unpersist(blocking = true)
-      prevG.unpersistVertices(blocking = true)
-      prevG.edges.unpersist(blocking = true)
+      oldMessages.unpersist()
+      prevG.unpersistVertices()
+      prevG.edges.unpersist()
       // count the iteration
       i += 1
     }
